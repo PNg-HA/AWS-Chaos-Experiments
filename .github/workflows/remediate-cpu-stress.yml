@@ -11,7 +11,7 @@ permissions:
 jobs:
   remediate-issue:
     if: contains(github.event.issue.labels.*.name, 'cpu-stress')
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
