@@ -13,7 +13,7 @@ def detect_issues():
     for reservation in response["Reservations"]:
         for instance in reservation["Instances"]:
             instance_ids.append(instance["InstanceId"])
-
+    print (response)
     if not instance_ids:
         print("No issues detected.")
         return
