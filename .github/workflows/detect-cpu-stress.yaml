@@ -1,0 +1,62 @@
+name: Detect CPU Stress Experiment
+
+on:
+  workflow_dispatch: # Allows manual triggering
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  detect-cpu-stress:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Retrieve the latest FIS Experiment Template ID
+        id: get_template_id
+        run: |
+          TEMPLATE_ID=$(aws fis list-experiment-templates --query "experimentTemplates[?description=='Experiment to inject CPU stress on EC2 instance'] | sort_by(@, &creationTime)[-1].id" --output text)
+          if [ -z "$TEMPLATE_ID" ] || [ "$TEMPLATE_ID" == "None" ]; then
+            echo "No existing template found. Creating a new one."
+            echo "template_id=new" >> $GITHUB_OUTPUT
+          else
+            echo "Using existing template: $TEMPLATE_ID"
+            echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Replace placeholders in FIS template
+        if: steps.get_template_id.outputs.template_id == 'new'
+        run: |
+          sed -e "s/\${AWS_REGION}/${{ secrets.AWS_REGION }}/g" \
+              -e "s/\${AWS_ACCOUNT_ID}/${{ secrets.AWS_ACCOUNT_ID }}/g" \
+              -e "s/\${INSTANCE_ID}/${{ secrets.INSTANCE_ID }}/g" \
+              -e "s/\${IAM_ROLE}/${{ secrets.IAM_ROLE }}/g" \
+              fis-templates/inject-cpu-stress.json > fis-templates/inject-cpu-stress-processed.json
+
+      - name: Detect Issues
+        run: python scripts/detect_cpu_stress_issues.py
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          GITHUB_REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLOUDWATCH_ALARM_NAME: ${{ secrets.CLOUDWATCH_ALARM_NAME }}
