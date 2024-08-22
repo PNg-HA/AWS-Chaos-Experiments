@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   remediate-network-latency:
-    if: contains(github.event.issue.labels.*.name, 'network-latency')
+    if: contains(github.event.issue.labels.*.name, 'NetworkIn Alarm Triggered')
     runs-on: ubuntu-latest
 
     steps:
