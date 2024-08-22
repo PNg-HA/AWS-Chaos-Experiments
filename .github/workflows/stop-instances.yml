@@ -51,7 +51,7 @@ jobs:
               -e "s/\${AWS_ACCOUNT_ID}/${{ secrets.AWS_ACCOUNT_ID }}/g" \
               -e "s/\${INSTANCE_ID}/${{ secrets.INSTANCE_ID }}/g" \
               -e "s/\${IAM_ROLE}/${{ secrets.IAM_ROLE }}/g" \
-              fis-templates/stop-instances-template.json > fis-templates/fis-stop-instances-template-processed.json
+              fis-templates/stop-instance-template.json > fis-templates/fis-stop-instances-template-processed.json
 
       - name: Create FIS Experiment Template for Stop Instances
         if: steps.get_template_id.outputs.template_id == 'new'
