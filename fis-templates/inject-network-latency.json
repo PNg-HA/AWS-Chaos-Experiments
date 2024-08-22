@@ -1,0 +1,33 @@
+{
+  "description": "Experiment to inject network latency on EC2 Windows instance",
+  "targets": {
+    "TargetInstances": {
+      "resourceType": "aws:ec2:instance",
+      "selectionMode": "ALL",
+      "resourceArns": [
+        "arn:aws:ec2:${AWS_REGION}:${AWS_ACCOUNT_ID}:instance/${INSTANCE_ID}"
+      ]
+    }
+  },
+  "actions": {
+    "InjectNetworkLatency": {
+      "actionId": "aws:ssm:send-command",
+      "description": "Inject network latency on target EC2 instances",
+      "parameters": {
+        "documentVersion": "$LATEST",
+        "duration": "PT20M",
+        "documentArn": "arn:aws:ssm:${AWS_REGION}::document/AWS-RunPowerShellScript",
+        "documentParameters": "{\"commands\":[\"netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8080 connectaddress=127.0.0.1\", \"netsh interface portproxy set v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8080 connectaddress=127.0.0.1 delay=1000\", \"Write-Output 'Introduced 1000ms network latency using netsh.'\"]}"
+      },
+      "targets": {
+        "Instances": "TargetInstances"
+      }
+    }
+  },
+  "stopConditions": [
+    {
+      "source": "none"
+    }
+  ],
+  "roleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/${IAM_ROLE}"
+}

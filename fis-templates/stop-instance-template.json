@@ -1,0 +1,28 @@
+{
+  "description": "Experiment to stop EC2 instances",
+  "targets": {
+    "TargetInstances": {
+      "resourceType": "aws:ec2:instance",
+      "selectionMode": "ALL",
+      "resourceArns": [
+        "arn:aws:ec2:${AWS_REGION}:${AWS_ACCOUNT_ID}:instance/${INSTANCE_ID}"
+      ]
+    }
+  },
+  "actions": {
+    "StopInstances": {
+      "actionId": "aws:ec2:stop-instances",
+      "description": "Stop target EC2 instance",
+      "parameters": {},
+      "targets": {
+        "Instances": "TargetInstances"
+      }
+    }
+  },
+  "roleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/${IAM_ROLE}",
+  "stopConditions": [
+    {
+    "source": "none"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "description": "Experiment to inject CPU stress on EC2 instances",
+  "targets": {
+    "TargetInstances": {
+      "resourceType": "aws:ec2:instance",
+      "selectionMode": "ALL",
+      "resourceArns": [
+        "arn:aws:ec2:${AWS_REGION}:${AWS_ACCOUNT_ID}:instance/${INSTANCE_ID}"
+      ]
+    }
+  },
+  "actions": {
+    "InjectCPUStress": {
+      "actionId": "aws:ssm:send-command",
+      "description": "Inject CPU stress on target EC2 instances",
+      "parameters": {
+        "documentVersion": "$LATEST",
+        "duration": "PT20M",
+        "documentArn": "arn:aws:ssm:${AWS_REGION}::document/AWS-RunPowerShellScript",
+         "documentParameters": "{\"commands\":[\"for ($i=0; $i -lt 8; $i++) {Start-Job -ScriptBlock {while ($true) {}}}\", \"Start-Sleep -Seconds 600\", \"Get-Job | Stop-Job\"]}"
+      },
+      "targets": {
+        "Instances": "TargetInstances"
+      }
+    }
+  },
+  "stopConditions": [
+    {
+      "source": "none"
+    }
+  ],
+  "roleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/${IAM_ROLE}"
+}
