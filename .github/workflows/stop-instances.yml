@@ -36,7 +36,7 @@ jobs:
         id: get_template_id
         run: |
           TEMPLATE_ID=$(aws fis list-experiment-templates --query "experimentTemplates[?description=='Experiment to stop EC2 instances'] | sort_by(@, &creationTime)[-1].id" --output text)
-          if [ -z "$TEMPLATE_ID" ]; then
+          if [ -z "$TEMPLATE_ID" ] || [ "$TEMPLATE_ID" == "None" ]; then
             echo "No existing template found. Creating a new one."
             echo "template_id=new" >> $GITHUB_OUTPUT
           else
@@ -51,7 +51,7 @@ jobs:
               -e "s/\${AWS_ACCOUNT_ID}/${{ secrets.AWS_ACCOUNT_ID }}/g" \
               -e "s/\${INSTANCE_ID}/${{ secrets.INSTANCE_ID }}/g" \
               -e "s/\${IAM_ROLE}/${{ secrets.IAM_ROLE }}/g" \
-              fis-templates/fis-stop-instances-template.json > fis-templates/fis-stop-instances-template-processed.json
+              fis-templates/stop-instances-template.json > fis-templates/fis-stop-instances-template-processed.json
 
       - name: Create FIS Experiment Template for Stop Instances
         if: steps.get_template_id.outputs.template_id == 'new'
